@@ -4,6 +4,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 import time
 
+from common.base import gen_uuid
+
 
 class UserGroup(models.Model):
     name = models.CharField(max_length=80, unique=True)
@@ -19,14 +21,13 @@ class User(AbstractUser):
         ('GA', 'GroupAdmin'),
         ('CU', 'CommonUser'),
     )
-    name = models.CharField(max_length=80)
-    uuid = models.CharField(max_length=100)
+    id = models.CharField(max_length=128, default=gen_uuid, primary_key=True, help_text=u'唯一标示符')
     role = models.CharField(max_length=2, choices=USER_ROLE_CHOICES, default='CU')
     group = models.ManyToManyField(UserGroup)
-    ssh_key_pwd = models.CharField(max_length=200)
-    # is_active = models.BooleanField(default=True)
-    # last_login = models.DateTimeField(null=True)
-    # date_joined = models.DateTimeField(null=True)
+    create_time = models.DateTimeField(auto_created=True, help_text=u"创建时间")
+    modify_time = models.DateTimeField(auto_now=True, help_text=u"修改时间")
+    delete_time = models.DateTimeField(auto_now=True, help_text=u"删除时间")
+    is_delete = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.username
@@ -43,12 +44,4 @@ class AdminGroup(models.Model):
 
     def __unicode__(self):
         return '%s: %s' % (self.user.username, self.group.name)
-
-
-class Document(models.Model):
-    def upload_to(self, filename):
-        return 'upload/'+str(self.user.id)+time.strftime('/%Y/%m/%d/', time.localtime())+filename
-
-    docfile = models.FileField(upload_to=upload_to)
-    user = models.ForeignKey(User)
 
